@@ -69,6 +69,20 @@ __device__ float dot_product(const float *a, const float *b, int n) {
 #include <cmath>
 #include <cuda_runtime.h>
 
+__global__ void pv_matmul(const float *P, const float *V, float *O, int seq_len, int head_dim) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= seq_len * head_dim) return;
+    int i = idx / head_dim;
+    int c = idx % head_dim;
+    float s = 0.f;
+    for (int j = 0; j < seq_len; ++j) s += P[i * seq_len + j] * V[j * head_dim + c];
+    O[i * head_dim + c] = s;
+}
+
+#include <cstdio>
+#include <cmath>
+#include <cuda_runtime.h>
+
 __global__ void naive_attention(const float *Q, const float *K, const float *V, float *O, int seq_len, int head_dim) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= seq_len) return;
