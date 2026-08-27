@@ -69,6 +69,54 @@ __device__ float dot_product(const float *a, const float *b, int n) {
 #include <cmath>
 #include <cuda_runtime.h>
 
+__global__ void flash_attention_causal_kernel(
+    const float *Q, const float *K, const float *V, float *O,
+    int seq_len, int head_dim, int Br, int Bc, float scale) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= seq_len) return;
+    (void)Br;
+    if (Bc < 1) Bc = 1;
+    float m = -INFINITY;
+    float l = 0.f;
+    float acc[16];
+    for (int t = 0; t < head_dim; ++t) acc[t] = 0.f;
+    for (int j0 = 0; j0 < seq_len; j0 += Bc) {
+        int j1 = j0 + Bc;
+        if (j1 > seq_len) j1 = seq_len;
+        float m_blk = -INFINITY;
+        int any = 0;
+        for (int j = j0; j < j1; ++j) {
+            if (j > i) continue;
+            float s = 0.f;
+            for (int t = 0; t < head_dim; ++t) s += Q[i * head_dim + t] * K[j * head_dim + t];
+            s *= scale;
+            m_blk = fmaxf(m_blk, s);
+            any = 1;
+        }
+        if (!any) continue;
+        float m_new = fmaxf(m, m_blk);
+        float alpha = expf(m - m_new);
+        l *= alpha;
+        for (int t = 0; t < head_dim; ++t) acc[t] *= alpha;
+        for (int j = j0; j < j1; ++j) {
+            if (j > i) continue;
+            float s = 0.f;
+            for (int t = 0; t < head_dim; ++t) s += Q[i * head_dim + t] * K[j * head_dim + t];
+            s *= scale;
+            float p = expf(s - m_new);
+            l += p;
+            for (int t = 0; t < head_dim; ++t) acc[t] += p * V[j * head_dim + t];
+        }
+        m = m_new;
+    }
+    float inv = l > 0.f ? 1.f / l : 0.f;
+    for (int t = 0; t < head_dim; ++t) O[i * head_dim + t] = acc[t] * inv;
+}
+
+#include <cstdio>
+#include <cmath>
+#include <cuda_runtime.h>
+
 bool attention_close(const float *a, const float *b, int n, float tol) {
     for (int i = 0; i < n; ++i) {
         if (fabsf(a[i] - b[i]) > tol) return false;
