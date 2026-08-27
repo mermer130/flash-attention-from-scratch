@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flash Attention 从零实现</title>
+  <style>
+    :root { color-scheme: light; --bg:#fff; --surface:#fafafa; --border:#e4e4e7; --text:#18181b; --muted:#71717a; --mono:ui-monospace,SFMono-Regular,Menlo,monospace; --sans:ui-sans-serif,system-ui,-apple-system,sans-serif; }
+    @media (prefers-color-scheme: dark) { :root { color-scheme: dark; --bg:#09090b; --surface:#18181b; --border:#27272a; --text:#fafafa; --muted:#a1a1aa; } }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:var(--sans); background:var(--bg); color:var(--text); line-height:1.6; -webkit-font-smoothing:antialiased; }
+    .hero { min-height:42vh; display:flex; align-items:center; justify-content:center; padding:64px 24px 40px; background:linear-gradient(135deg,var(--surface),var(--bg)); }
+    h1 { font-family:var(--mono); font-size:clamp(28px,4.6vw,44px); letter-spacing:-.03em; margin:0; text-align:center; line-height:1.2; }
+    .wrap { max-width:760px; margin:0 auto; padding:0 24px 80px; }
+    p { color:var(--muted); }
+    code { font-family:var(--mono); font-size:.92em; }
+    .how { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin:28px 0 40px; }
+    .how h2, .steps h2 { font-family:var(--mono); font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:0 0 12px; }
+    ul { list-style:none; padding:0; margin:0; }
+    li { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); font-family:var(--mono); font-size:14px; }
+    li span { color:var(--muted); min-width:2.2em; }
+    li.done { color:var(--muted); text-decoration:line-through; }
+    .foot { margin-top:48px; padding-top:20px; border-top:1px solid var(--border); color:var(--muted); font-size:13px; }
+    .foot a { color:var(--text); text-decoration:none; }
+  </style>
+</head>
+<body>
+  <section class="hero"><h1>Flash Attention 从零实现</h1></section>
+  <div class="wrap">
+    <p>只用 CUDA 从线程下标写到分块注意力：先做逐元素与归约，再拼出朴素 softmax 注意力，最后用在线 softmax 切块，避免物化整张分数矩阵。</p>
+    <div class="how">
+      <h2>How to run</h2>
+      <p><code>compile and run model.cu</code></p>
+    </div>
+    <div class="steps"><h2>Steps</h2><ul><li class="done"><span>1.</span> vector_add</li>
+          <li class="done"><span>2.</span> scale_array</li>
+          <li class="done"><span>3.</span> elementwise_exp</li>
+          <li class=""><span>4.</span> row_max</li>
+          <li class=""><span>5.</span> row_sum</li>
+          <li class=""><span>6.</span> dot_product</li>
+          <li class=""><span>7.</span> matmul</li>
+          <li class=""><span>8.</span> transpose</li>
+          <li class=""><span>9.</span> qk_scores</li>
+          <li class=""><span>10.</span> softmax_rows</li>
+          <li class=""><span>11.</span> pv_matmul</li>
+          <li class=""><span>12.</span> naive_attention</li>
+          <li class=""><span>13.</span> online_softmax_update</li>
+          <li class=""><span>14.</span> plan_tiling</li>
+          <li class=""><span>15.</span> flash_attention_kernel</li>
+          <li class=""><span>16.</span> flash_attention_launcher</li>
+          <li class=""><span>17.</span> flash_attention_causal_kernel</li>
+          <li class=""><span>18.</span> attention_close</li></ul></div>
+    <p class="foot"><a href="https://codeky.online">codeky.online</a></p>
+  </div>
+</body>
+</html>
