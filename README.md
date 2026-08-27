@@ -22,7 +22,7 @@ compile and run model.cu
 - [ ] **10.** softmax_rows
 - [ ] **11.** pv_matmul
 - [ ] **12.** naive_attention
-- [ ] **13.** online_softmax_update
+- [x] **13.** online_softmax_update
 - [x] **14.** plan_tiling
 - [x] **15.** flash_attention_kernel
 - [x] **16.** flash_attention_launcher
