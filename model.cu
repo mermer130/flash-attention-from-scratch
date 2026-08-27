@@ -64,3 +64,14 @@ __device__ float dot_product(const float *a, const float *b, int n) {
     }
     return s;
 }
+
+#include <cstdio>
+#include <cmath>
+#include <cuda_runtime.h>
+
+bool attention_close(const float *a, const float *b, int n, float tol) {
+    for (int i = 0; i < n; ++i) {
+        if (fabsf(a[i] - b[i]) > tol) return false;
+    }
+    return true;
+}
