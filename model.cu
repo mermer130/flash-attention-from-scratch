@@ -33,3 +33,22 @@ __global__ void elementwise_exp(float *a, int n) {
         a[i] = expf(a[i]);
     }
 }
+
+#include <cstdio>
+#include <cmath>
+#include <cuda_runtime.h>
+
+__global__ void row_max(const float *matrix, float *out, int rows, int cols) {
+    int r = blockIdx.x * blockDim.x + threadIdx.x;
+    if (r >= rows) {
+        return;
+    }
+    const float *row_ptr = matrix + r * cols;
+    float max_val = row_ptr[0];
+    for (int c = 1; c < cols; c++) {
+        if (row_ptr[c] > max_val) {
+            max_val = row_ptr[c];
+        }
+    }
+    out[r] = max_val;
+}
