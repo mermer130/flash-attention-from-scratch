@@ -19,7 +19,7 @@ compile and run model.cu
 - [ ] **7.** matmul
 - [ ] **8.** transpose
 - [ ] **9.** qk_scores
-- [ ] **10.** softmax_rows
+- [x] **10.** softmax_rows
 - [x] **11.** pv_matmul
 - [x] **12.** naive_attention
 - [x] **13.** online_softmax_update
