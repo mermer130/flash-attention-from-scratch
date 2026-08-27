@@ -69,6 +69,22 @@ __device__ float dot_product(const float *a, const float *b, int n) {
 #include <cmath>
 #include <cuda_runtime.h>
 
+void plan_tiling(int N, int d, int M, int *Br, int *Bc, int *Tr, int *Tc) {
+    int t = 4 * d;
+    int bc = (M + t - 1) / t;
+    if (bc < 1) bc = 1;
+    int br = bc < d ? bc : d;
+    if (br < 1) br = 1;
+    *Bc = bc;
+    *Br = br;
+    *Tr = (N + br - 1) / br;
+    *Tc = (N + bc - 1) / bc;
+}
+
+#include <cstdio>
+#include <cmath>
+#include <cuda_runtime.h>
+
 __global__ void flash_attention_kernel(
     const float *Q, const float *K, const float *V, float *O,
     int seq_len, int head_dim, int Br, int Bc) {
