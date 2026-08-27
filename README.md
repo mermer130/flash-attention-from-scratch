@@ -14,7 +14,7 @@ compile and run model.cu
 - [x] **2.** scale_array
 - [x] **3.** elementwise_exp
 - [x] **4.** row_max
-- [ ] **5.** row_sum
+- [x] **5.** row_sum
 - [x] **6.** dot_product
 - [x] **7.** matmul
 - [x] **8.** transpose
