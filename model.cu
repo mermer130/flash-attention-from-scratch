@@ -57,6 +57,26 @@ __global__ void row_max(const float *matrix, float *out, int rows, int cols) {
 #include <cmath>
 #include <cuda_runtime.h>
 
+__global__ void row_sum(const float *matrix, float *out, int rows, int cols) {
+    int r = blockIdx.x;
+    if (r >= rows) return;
+    __shared__ float sdata[256];
+    float sum = 0.f;
+    for (int c = threadIdx.x; c < cols; c += blockDim.x)
+        sum += matrix[r * cols + c];
+    sdata[threadIdx.x] = sum;
+    __syncthreads();
+    for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
+        if (threadIdx.x < stride) sdata[threadIdx.x] += sdata[threadIdx.x + stride];
+        __syncthreads();
+    }
+    if (threadIdx.x == 0) out[r] = sdata[0];
+}
+
+#include <cstdio>
+#include <cmath>
+#include <cuda_runtime.h>
+
 __device__ float dot_product(const float *a, const float *b, int n) {
     float s = 0.0f;
     for (int i = 0; i < n; ++i) {
