@@ -69,6 +69,38 @@ __device__ float dot_product(const float *a, const float *b, int n) {
 #include <cmath>
 #include <cuda_runtime.h>
 
+void flash_attention_launcher(const float *Q, const float *K, const float *V, float *O,
+    int batch, int heads, int seq_len, int head_dim) {
+    int stride = seq_len * head_dim;
+    size_t bytes = (size_t)batch * heads * stride * sizeof(float);
+    float *dQ = nullptr, *dK = nullptr, *dV = nullptr, *dO = nullptr;
+    cudaMalloc(&dQ, bytes);
+    cudaMalloc(&dK, bytes);
+    cudaMalloc(&dV, bytes);
+    cudaMalloc(&dO, bytes);
+    cudaMemcpy(dQ, Q, bytes, cudaMemcpyHostToDevice);
+    cudaMemcpy(dK, K, bytes, cudaMemcpyHostToDevice);
+    cudaMemcpy(dV, V, bytes, cudaMemcpyHostToDevice);
+    int Br = seq_len;
+    int Bc = seq_len;
+    int threads = 128;
+    int blocks = (seq_len + threads - 1) / threads;
+    for (int b = 0; b < batch; ++b) {
+        for (int h = 0; h < heads; ++h) {
+            int off = (b * heads + h) * stride;
+            flash_attention_kernel<<<blocks, threads>>>(dQ + off, dK + off, dV + off, dO + off,
+                seq_len, head_dim, Br, Bc);
+        }
+    }
+    cudaDeviceSynchronize();
+    cudaMemcpy(O, dO, bytes, cudaMemcpyDeviceToHost);
+    cudaFree(dQ); cudaFree(dK); cudaFree(dV); cudaFree(dO);
+}
+
+#include <cstdio>
+#include <cmath>
+#include <cuda_runtime.h>
+
 __global__ void flash_attention_causal_kernel(
     const float *Q, const float *K, const float *V, float *O,
     int seq_len, int head_dim, int Br, int Bc, float scale) {
