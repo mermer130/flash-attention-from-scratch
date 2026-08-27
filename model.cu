@@ -69,6 +69,25 @@ __device__ float dot_product(const float *a, const float *b, int n) {
 #include <cmath>
 #include <cuda_runtime.h>
 
+__global__ void softmax_rows(float *M, int rows, int cols) {
+    int r = blockIdx.x;
+    if (r >= rows) return;
+    if (threadIdx.x != 0) return;
+    float *row = M + r * cols;
+    float m = -INFINITY;
+    for (int c = 0; c < cols; ++c) m = fmaxf(m, row[c]);
+    float s = 0.f;
+    for (int c = 0; c < cols; ++c) {
+        row[c] = expf(row[c] - m);
+        s += row[c];
+    }
+    for (int c = 0; c < cols; ++c) row[c] /= s;
+}
+
+#include <cstdio>
+#include <cmath>
+#include <cuda_runtime.h>
+
 __global__ void pv_matmul(const float *P, const float *V, float *O, int seq_len, int head_dim) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= seq_len * head_dim) return;
