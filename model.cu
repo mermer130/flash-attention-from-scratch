@@ -52,3 +52,15 @@ __global__ void row_max(const float *matrix, float *out, int rows, int cols) {
     }
     out[r] = max_val;
 }
+
+#include <cstdio>
+#include <cmath>
+#include <cuda_runtime.h>
+
+__device__ float dot_product(const float *a, const float *b, int n) {
+    float s = 0.0f;
+    for (int i = 0; i < n; ++i) {
+        s += a[i] * b[i];
+    }
+    return s;
+}
