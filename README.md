@@ -15,7 +15,7 @@ compile and run model.cu
 - [x] **3.** elementwise_exp
 - [x] **4.** row_max
 - [ ] **5.** row_sum
-- [ ] **6.** dot_product
+- [x] **6.** dot_product
 - [ ] **7.** matmul
 - [ ] **8.** transpose
 - [ ] **9.** qk_scores
