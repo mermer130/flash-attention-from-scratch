@@ -26,5 +26,5 @@ compile and run model.cu
 - [ ] **14.** plan_tiling
 - [ ] **15.** flash_attention_kernel
 - [ ] **16.** flash_attention_launcher
-- [ ] **17.** flash_attention_causal_kernel
+- [x] **17.** flash_attention_causal_kernel
 - [x] **18.** attention_close
