@@ -69,6 +69,34 @@ __device__ float dot_product(const float *a, const float *b, int n) {
 #include <cmath>
 #include <cuda_runtime.h>
 
+void online_softmax_update(float &m_i, float &l_i, float *O_i,
+    const float *S_ij, const float *V_j, int Br, int Bc, int d) {
+    (void)Br;
+    float m_tilde = -INFINITY;
+    for (int j = 0; j < Bc; ++j) m_tilde = fmaxf(m_tilde, S_ij[j]);
+    float l_tilde = 0.f;
+    float P[32];
+    for (int j = 0; j < Bc; ++j) {
+        P[j] = expf(S_ij[j] - m_tilde);
+        l_tilde += P[j];
+    }
+    float m_new = fmaxf(m_i, m_tilde);
+    float l_new = expf(m_i - m_new) * l_i + expf(m_tilde - m_new) * l_tilde;
+    float scale_old = expf(m_i - m_new) * l_i;
+    float scale_p = expf(m_tilde - m_new);
+    for (int t = 0; t < d; ++t) {
+        float acc = scale_old * O_i[t];
+        for (int j = 0; j < Bc; ++j) acc += scale_p * P[j] * V_j[j * d + t];
+        O_i[t] = acc / l_new;
+    }
+    m_i = m_new;
+    l_i = l_new;
+}
+
+#include <cstdio>
+#include <cmath>
+#include <cuda_runtime.h>
+
 void plan_tiling(int N, int d, int M, int *Br, int *Bc, int *Tr, int *Tc) {
     int t = 4 * d;
     int bc = (M + t - 1) / t;
