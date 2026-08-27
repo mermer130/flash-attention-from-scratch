@@ -69,6 +69,34 @@ __device__ float dot_product(const float *a, const float *b, int n) {
 #include <cmath>
 #include <cuda_runtime.h>
 
+__global__ void naive_attention(const float *Q, const float *K, const float *V, float *O, int seq_len, int head_dim) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= seq_len) return;
+    float scale = rsqrtf((float)head_dim);
+    float s[32];
+    float m = -INFINITY;
+    for (int j = 0; j < seq_len; ++j) {
+        float acc = 0.f;
+        for (int t = 0; t < head_dim; ++t) acc += Q[i * head_dim + t] * K[j * head_dim + t];
+        s[j] = acc * scale;
+        m = fmaxf(m, s[j]);
+    }
+    float sum = 0.f;
+    for (int j = 0; j < seq_len; ++j) {
+        s[j] = expf(s[j] - m);
+        sum += s[j];
+    }
+    for (int t = 0; t < head_dim; ++t) {
+        float o = 0.f;
+        for (int j = 0; j < seq_len; ++j) o += (s[j] / sum) * V[j * head_dim + t];
+        O[i * head_dim + t] = o;
+    }
+}
+
+#include <cstdio>
+#include <cmath>
+#include <cuda_runtime.h>
+
 void online_softmax_update(float &m_i, float &l_i, float *O_i,
     const float *S_ij, const float *V_j, int Br, int Bc, int d) {
     (void)Br;
