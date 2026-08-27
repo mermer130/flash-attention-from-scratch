@@ -69,6 +69,18 @@ __device__ float dot_product(const float *a, const float *b, int n) {
 #include <cmath>
 #include <cuda_runtime.h>
 
+__global__ void transpose(const float *in, float *out, int rows, int cols) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= rows * cols) return;
+    int i = idx / cols;
+    int j = idx % cols;
+    out[j * rows + i] = in[i * cols + j];
+}
+
+#include <cstdio>
+#include <cmath>
+#include <cuda_runtime.h>
+
 __global__ void qk_scores(const float *Q, const float *K, float *S, int seq_len, int head_dim) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= seq_len * seq_len) return;
