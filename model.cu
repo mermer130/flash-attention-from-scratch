@@ -69,6 +69,20 @@ __device__ float dot_product(const float *a, const float *b, int n) {
 #include <cmath>
 #include <cuda_runtime.h>
 
+__global__ void qk_scores(const float *Q, const float *K, float *S, int seq_len, int head_dim) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= seq_len * seq_len) return;
+    int i = idx / seq_len;
+    int j = idx % seq_len;
+    float s = 0.f;
+    for (int t = 0; t < head_dim; ++t) s += Q[i * head_dim + t] * K[j * head_dim + t];
+    S[i * seq_len + j] = s * rsqrtf((float)head_dim);
+}
+
+#include <cstdio>
+#include <cmath>
+#include <cuda_runtime.h>
+
 __global__ void softmax_rows(float *M, int rows, int cols) {
     int r = blockIdx.x;
     if (r >= rows) return;
