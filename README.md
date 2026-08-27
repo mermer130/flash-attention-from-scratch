@@ -16,7 +16,7 @@ compile and run model.cu
 - [x] **4.** row_max
 - [ ] **5.** row_sum
 - [x] **6.** dot_product
-- [ ] **7.** matmul
+- [x] **7.** matmul
 - [x] **8.** transpose
 - [x] **9.** qk_scores
 - [x] **10.** softmax_rows
