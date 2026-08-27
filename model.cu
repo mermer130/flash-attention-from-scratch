@@ -69,6 +69,20 @@ __device__ float dot_product(const float *a, const float *b, int n) {
 #include <cmath>
 #include <cuda_runtime.h>
 
+__global__ void matmul(const float *A, const float *B, float *C, int M, int N, int K) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= M * N) return;
+    int i = idx / N;
+    int j = idx % N;
+    float s = 0.f;
+    for (int k = 0; k < K; ++k) s += A[i * K + k] * B[k * N + j];
+    C[i * N + j] = s;
+}
+
+#include <cstdio>
+#include <cmath>
+#include <cuda_runtime.h>
+
 __global__ void transpose(const float *in, float *out, int rows, int cols) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= rows * cols) return;
