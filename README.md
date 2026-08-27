@@ -25,6 +25,6 @@ compile and run model.cu
 - [ ] **13.** online_softmax_update
 - [ ] **14.** plan_tiling
 - [ ] **15.** flash_attention_kernel
-- [ ] **16.** flash_attention_launcher
+- [x] **16.** flash_attention_launcher
 - [x] **17.** flash_attention_causal_kernel
 - [x] **18.** attention_close
